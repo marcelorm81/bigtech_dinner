@@ -1,0 +1,17 @@
+{
+  "name": "bigtech-dinner",
+  "version": "1.0.0",
+  "description": "Big Tech Dinner - Interactive Trump vs Tech CEOs Game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "dev": "npx serve . -l 3000"
+  },
+  "keywords": ["game", "trump", "tech", "interactive", "mobile"],
+  "author": "Big Tech Dinner",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

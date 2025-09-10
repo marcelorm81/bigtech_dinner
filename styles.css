@@ -1,0 +1,1818 @@
+*{box-sizing:border-box}
+html,body,#app{height:100%}
+body{
+  margin:0;
+  background:#ead8b6;
+  font-family:'Pixelify Sans','Press Start 2P',system-ui,monospace;
+  color:#1c2a35;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /* Prevent mobile browser behaviors */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* Infinite background extension for large screens */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('assets/background_extention.jpg');
+  background-repeat: repeat-x;
+  background-position: center top;
+  background-size: auto 100%;
+  z-index: -2;
+  opacity: 0.8;
+}
+
+/* Only show extension on screens wider than 1920px */
+@media (min-width: 1921px) {
+  body::before {
+    display: block;
+  }
+}
+
+@media (max-width: 1920px) {
+  body::before {
+    display: none;
+  }
+}
+#app{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  /* Ensure all touch events are captured */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Stage scales proportionally to fit screen while maintaining 16:9 ratio */
+#stage{
+  position:relative;
+  background:url('assets/background.jpg') center/cover no-repeat;
+  width:100vw;
+  height:56.25vw; /* 16:9 ratio */
+  max-height:100vh;
+  max-width:177.78vh; /* When height constrained, maintain ratio */
+}
+
+/* When height is the constraint */
+@media (max-aspect-ratio: 16/9) {
+  #stage {
+    width:177.78vh;
+    height:100vh;
+  }
+}
+
+/* Game GIFs use EXACT SAME layout as intro */
+.actorGif{image-rendering:pixelated;display:none}
+.is-intro .actorGif{display:none !important}
+.is-game .actorGif{position:static !important; display:block !important} /* Override absolute positioning for flexbox layout and make visible */
+
+/* Hide game GIFs container by default */
+#gameGifsContainer{display:none}
+
+/* COPY-PASTE intro layout for game state */
+.is-game #gameGifsContainer{
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:62.66%; /* 1203px of 1920px - EXACT same as intro */
+  height:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  z-index:15; /* Above logo but below HUD and speech bubbles */
+}
+
+.is-game #gameGifsContainer img{
+  width:33.33%; /* Each GIF takes 1/3 of container - EXACT same as intro */
+  height:auto;
+  object-fit:contain;
+  image-rendering:pixelated;
+  display:block;
+}
+
+#game{
+  position:absolute;
+  inset:0;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  pointer-events:auto;
+  z-index:25; /* Above flower overlay and GIFs - for speech bubbles */
+  /* Capture all touch events */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Flower overlay - scales with stage and appears over art elements */
+#flowerOverlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
+  display:none;
+  z-index:18; /* Above GIFs (z-index 15) but below speech bubbles (z-index 25) */
+}
+
+.is-intro #flowerOverlay{
+  display:block;
+}
+
+.is-game #flowerOverlay{
+  display:block; /* Show flower overlay over art elements in game too */
+}
+
+#ui{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.panel{pointer-events:auto;display:flex;flex-direction:column;gap:16px;align-items:center;background:transparent;border:none;padding:0;box-shadow:none}
+.hidden{display:none}
+
+/* Intro layout - all positions based on stage size for consistent scaling */
+#intro{position:absolute;inset:0;display:none}
+.is-intro #intro{display:block;width:100%;height:100%}
+
+.is-intro .logoGif{
+  position:absolute;
+  top:3.5%; /* Moved up a bit */
+  left:50%;
+  transform:translateX(-50%);
+  width:38%; /* Reduced from 45% */
+  height:auto;
+  image-rendering:pixelated;
+  z-index:5; /* Behind the GIFs */
+}
+
+.is-intro .intro-gifs{
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:62.66%; /* 1203px of 1920px */
+  height:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  z-index:15; /* Above the logo so heads bleed over it */
+}
+
+.is-intro .intro-gifs img{
+  width:33.33%; /* Each GIF takes 1/3 of container */
+  height:auto;
+  object-fit:contain;
+  image-rendering:pixelated;
+}
+
+/* Mobile portrait - smaller size for intro GIFs */
+@media (orientation: portrait) and (max-width: 768px) {
+  .is-intro .intro-gifs {
+    justify-content: center !important; /* Center the container */
+    gap: -50px !important; /* Negative gap for overlap */
+    padding-bottom: 80px !important; /* More padding from bottom */
+  }
+  
+  .is-intro .intro-gifs img{
+    width: clamp(200px, 40vw, 300px) !important; /* Smaller size for mobile portrait */
+    object-fit: cover !important; /* Allow cropping */
+    object-position: center bottom !important;
+    margin: 0 -25px !important; /* Negative margins for closer overlap */
+  }
+}
+
+.is-intro .startGif{
+  position:absolute;
+  bottom:4.7%; /* 90px of 1920px height */
+  left:50%;
+  transform:translateX(-50%);
+  background:#ffffff; /* White background */
+  color:#e31b2f; /* Red text */
+  border:clamp(4px, 0.8vw, 8px) solid #000; /* Pixelated thick border */
+  padding:clamp(6px, 0.8vw, 10px) clamp(12px, 1.5vw, 20px);
+  font-size:clamp(12px, 1.5vw, 18px);
+  text-shadow:0 2px #000000; /* Black shadow */
+  font-family:'Press Start 2P',monospace;
+  border-radius:0; /* Sharp pixelated corners */
+  cursor:pointer;
+  z-index:25; /* Higher than flower overlay (z-index: 20) */
+  transition:all 0.2s ease;
+  animation: playNowColorSwitch 3s ease-in-out infinite; /* Soft color switching animation */
+  
+  /* Pixelated styling */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  
+  /* Ensure button can be clicked */
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* Pixelated box shadow effect */
+  box-shadow: 
+    clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 8px) 0 #000,
+    clamp(8px, 1.6vw, 16px) clamp(8px, 1.6vw, 16px) 0 #000;
+}
+
+.is-intro .startGif:hover{
+  transform:translateX(-50%) translateY(clamp(2px, 0.4vw, 4px)); /* Pixelated hover movement */
+  box-shadow: 
+    clamp(2px, 0.4vw, 4px) clamp(2px, 0.4vw, 4px) 0 #000,
+    clamp(6px, 1.2vw, 12px) clamp(6px, 1.2vw, 12px) 0 #000; /* Pixelated shadow on hover */
+  animation-play-state: paused; /* Pause animation on hover */
+}
+
+/* Speech Bubble Styles */
+.speech-bubble {
+  position: absolute;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.speech-bubble img {
+  width: clamp(120px, 15vw, 200px);
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.bubble-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1.2vw, 12px);
+  color: #000000;
+  text-align: center;
+  white-space: normal; /* Allow line breaks */
+  line-height: 1.2;
+  z-index: 26;
+  padding-bottom: 30px; /* Move text higher in bubble */
+}
+
+.left-bubble {
+  top: calc(20% + 200px); /* 100px higher than before */
+  left: 15%;
+}
+
+.right-bubble {
+  top: calc(20% + 200px); /* 100px higher than before */
+  right: 15%;
+}
+
+.speech-bubble.hidden {
+  opacity: 0;
+  transform: scale(0.3) translateY(0px);
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Longer fade out */
+  pointer-events: none;
+}
+
+.speech-bubble:not(.hidden) {
+  opacity: 1;
+  transform: scale(1) translateY(0px);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: bubbleFloat 1.5s ease-out 0.3s forwards; /* Longer animation with upward movement */
+}
+
+@keyframes bubbleFloat {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1) translateY(-30px); /* Slow upward movement */
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-50px); /* Fade out while moving up */
+  }
+}
+
+/* Play Now Button Color Switch Animation */
+@keyframes playNowColorSwitch {
+  0%, 50% {
+    background: #ffffff; /* White background */
+    color: #e31b2f; /* Red text */
+    text-shadow: 0 2px #000000; /* Black shadow */
+  }
+  25%, 75% {
+    background: #e31b2f; /* Red background */
+    color: #ffffff; /* White text */
+    text-shadow: 0 2px #000000; /* Black shadow */
+  }
+}
+
+/* Mobile breakpoint - adjust proportions for small screens */
+@media (max-width: 768px) {
+  .is-intro .logoGif{
+    top:3%;
+    width:70%;
+  }
+  
+  .is-intro .intro-gifs{
+    width:90%;
+    bottom:15%;
+  }
+  
+  .is-intro .startGif{
+    bottom:3%;
+    font-size:clamp(16px, 4vw, 24px);
+    padding:clamp(10px, 2vw, 16px) clamp(20px, 4vw, 32px);
+  }
+  
+  /* Mobile portrait - bigger start button with 30px bottom padding */
+  @media (orientation: portrait) and (max-width: 768px) {
+    .is-intro .startGif{
+      font-size:clamp(16px, 4vw, 24px); /* Smaller font to fit one line */
+      padding:clamp(12px, 2.5vw, 20px) clamp(24px, 5vw, 40px); /* Adjusted padding */
+      bottom: calc(3% + 30px); /* Add 30px bottom padding */
+      white-space: nowrap; /* Force one line */
+    }
+  }
+}
+
+/* Mobile portrait specific improvements */
+@media (orientation: portrait) and (max-width: 768px) {
+  /* Use same backgrounds as desktop for mobile portrait */
+  .is-intro #stage {
+    background-image: url('assets/background.jpg');
+    background-size: auto 100%; /* Fit height only, maintain aspect ratio */
+    background-position: center; /* Center horizontally */
+  }
+  
+  .is-intro #flowerOverlay {
+    background-image: url('assets/floweroverlay.png');
+    background-size: 100% auto; /* Fit width, maintain aspect ratio */
+    background-position: center bottom; /* Center horizontally, anchor to bottom */
+    background-repeat: no-repeat;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 20 !important; /* Above the GIFs (which are z-index: 15) */
+  }
+  
+  .is-game #flowerOverlay {
+    background-image: url('assets/floweroverlay.png');
+    background-size: 100% auto; /* Fit width, maintain aspect ratio */
+    background-position: center bottom; /* Center horizontally, anchor to bottom */
+    background-repeat: no-repeat;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 20 !important; /* Above the GIFs (which are z-index: 15) */
+  }
+  
+  /* Gameplay mobile improvements */
+  .is-game #gameGifsContainer {
+    padding-bottom: 80px !important; /* Same padding as intro page */
+    justify-content: center;
+    gap: -50px !important; /* Same overlap as intro page */
+  }
+  
+  .is-game .actorGif {
+    width: clamp(200px, 40vw, 300px) !important; /* Same size as intro page */
+    height: auto !important;
+    object-fit: cover !important; /* Allow cropping */
+    object-position: center bottom !important;
+    margin: 0 -25px !important; /* Same overlap margins as intro page */
+  }
+  
+  /* VS Intro Mobile Portrait - Match Attached Image */
+  .vs-intro-content {
+    width: calc(100vw - 20px) !important;
+    height: 80vh !important;
+    margin: 10px !important;
+    padding: 0 !important;
+  }
+  
+  .vs-intro-layout {
+    display: flex !important;
+    height: 100% !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    position: relative !important;
+  }
+  
+  /* Character containers */
+  .vs-character-left,
+  .vs-character-right {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    height: 100% !important;
+  }
+  
+  /* Character images - larger and overlapping */
+  .vs-character-left img,
+  .vs-character-right img {
+    width: 250px !important; /* Larger size like in image */
+    height: 250px !important;
+    object-fit: contain !important;
+    image-rendering: pixelated !important;
+    filter: brightness(1.3) contrast(1.2) saturate(1.1) !important;
+    z-index: 2 !important;
+    position: absolute !important;
+    bottom: 0 !important;
+  }
+  
+  .vs-character-left img {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .vs-character-right img {
+    right: 50% !important;
+    transform: translateX(50%) !important;
+  }
+  
+  /* Character names - positioned in corners */
+  .vs-character-name {
+    position: absolute !important;
+    top: 15px !important;
+    padding-top: 15px !important; /* Added 15px top padding */
+    font-size: 16px !important;
+    color: #ffffff !important;
+    font-family: 'Press Start 2P', monospace !important;
+    text-shadow: 2px 2px 0px #000000 !important;
+    z-index: 3 !important;
+    white-space: nowrap !important;
+  }
+  
+  .vs-character-left .vs-character-name {
+    left: 50px !important; /* Increased side padding from 40px to 50px */
+  }
+  
+  .vs-character-right .vs-character-name {
+    right: 5px !important; /* Reduced padding by half (10px to 5px) */
+  }
+  
+  /* VS logo - centered and higher up */
+  .vs-center {
+    position: absolute !important;
+    top: 25% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1 !important;
+  }
+  
+  .vs-logo {
+    width: 337px !important; /* Reduced by 25% from 450px */
+    height: auto !important;
+  }
+  
+  .avatarCard:hover {
+    box-shadow: 0 clamp(4px, 1vw, 8px) 0 #000 !important;
+    transform: translateY(-2px) !important;
+  }
+  
+  .avatarCard.selecting {
+    animation: flickerSelect 0.8s ease-in-out forwards !important;
+  }
+  
+  /* HUD mobile improvements */
+  .hud {
+    padding: 10px 15px;
+  }
+  
+  .hud-left, .hud-right {
+    font-size: clamp(12px, 3vw, 16px);
+  }
+  
+  .hud-center {
+    font-size: clamp(14px, 3.5vw, 18px);
+  }
+  
+  /* Countdown mobile improvements */
+  .countdown-overlay {
+    font-size: clamp(60px, 15vw, 120px);
+  }
+  
+  .countdown-instruction {
+    bottom: 20px;
+    gap: 10px;
+  }
+  
+  .tap-gif {
+    width: 30px;
+  }
+  
+  .countdown-instruction p {
+    font-size: clamp(8px, 2.5vw, 12px);
+  }
+  
+  .countdown-tap-icon {
+    width: clamp(80px, 18vw, 150px);
+  }
+  
+  .tap-text {
+    font-size: clamp(28px, 7vw, 36px) !important;
+  }
+  
+  /* Popup mobile improvements */
+  .popup-content {
+    width: min(95vw, 400px);
+    height: min(85vh, 650px);
+    margin: 10px;
+  }
+  
+  .popup-text {
+    font-size: clamp(10px, 2.5vw, 14px);
+    line-height: 1.4;
+  }
+  
+  .popup-button {
+    font-size: clamp(10px, 2.5vw, 14px);
+    padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
+  }
+  
+  /* Speech bubble mobile adjustments */
+  .speech-bubble img {
+    width: clamp(120px, 18vw, 200px); /* Bigger speech bubbles */
+  }
+  
+  .bubble-text {
+    font-size: clamp(8px, 1.5vw, 12px); /* Bigger text */
+    padding-bottom: 30px; /* Proportional to desktop (60px/2) */
+  }
+  
+  .left-bubble {
+    top: calc(15% + 100px); /* 100px higher than before on mobile */
+    left: 10%;
+  }
+  
+  .right-bubble {
+    top: calc(15% + 100px); /* 100px higher than before on mobile */
+    right: 10%;
+  }
+}
+
+/* Selection menu - scales with stage like intro */
+#menu{
+  position:absolute;
+  inset:0;
+  background:#e31b2f;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:4vh;
+  padding:3vh 5vw;
+  z-index:30; /* Ensure menu is above other elements */
+}
+.is-intro #menu{display:none !important}
+.is-game #menu{display:none !important}
+
+#menu h1{
+  font-family:'Press Start 2P',monospace;
+  color:#ffe6c7;
+  text-shadow:0 6px #5a2a2a;
+  margin:0;
+  font-size:clamp(18px, 2.5vw, 32px);
+  text-align:center;
+  margin-bottom:1vh;
+  line-height:1.4; /* Smaller line height */
+  text-transform: uppercase; /* All caps */
+}
+
+#avatars{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:clamp(12px, 2vw, 24px); /* Smaller gap between containers */
+  width:min(90vw, 85vh);
+  max-width:1400px;
+  justify-items:center;
+}
+
+.avatarCard{
+  display:flex;
+  align-items:flex-end; /* Images fixed at bottom */
+  justify-content:center;
+  width:100%;
+  aspect-ratio:1/1;
+  border:clamp(3px, 0.5vw, 6px) solid #000; /* Thinner black stroke */
+  border-radius:clamp(12px, 2vw, 24px);
+  background:#0c3cff;
+  position:relative;
+  cursor:pointer;
+  pointer-events:auto; /* Ensure button can be clicked */
+  user-select:none; /* Prevent text selection */
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  transition:all 0.2s ease;
+  overflow:hidden;
+  padding:0; /* No padding */
+}
+
+.avatarCard img{
+  width:110%; /* Slightly bigger dimensions */
+  height:110%; /* Slightly bigger dimensions */
+  object-fit:cover;
+  object-position:center bottom; /* Images fixed at bottom */
+  image-rendering:pixelated;
+  margin-bottom:0; /* No bottom margin */
+}
+
+.avatarCard.selected{
+  background:#ffef3b;
+  box-shadow:0 clamp(4px, 1vw, 8px) 0 #000;
+  transform:translateY(-2px);
+}
+
+.avatarCard.selecting{
+  animation: flickerSelect 0.8s ease-in-out forwards;
+}
+
+@keyframes flickerSelect {
+  0% { background: #0c3cff; }
+  10% { background: #ffef3b; }
+  20% { background: #0c3cff; }
+  30% { background: #ffef3b; }
+  40% { background: #0c3cff; }
+  50% { background: #ffef3b; }
+  60% { background: #0c3cff; }
+  70% { background: #ffef3b; }
+  80% { background: #0c3cff; }
+  90% { background: #ffef3b; }
+  100% { 
+    background: #ffef3b;
+    box-shadow: 0 clamp(4px, 1vw, 8px) 0 #000;
+    transform: translateY(-2px);
+  }
+}
+
+#startBtn{
+  pointer-events:none;
+  opacity:.3;
+  background:transparent;
+  color:#000000; /* Black text */
+  border:clamp(4px, 0.8vw, 8px) solid #000;
+  padding:clamp(8px, 1vw, 14px) clamp(16px, 2vw, 28px);
+  font-size:clamp(14px, 1.8vw, 22px);
+  text-shadow:none; /* No shadow */
+  font-family:'Press Start 2P',monospace;
+  border-radius:clamp(6px, 1vw, 12px);
+  margin-top:1vh;
+  transition:all 0.2s ease;
+}
+
+#startBtn.enabled{
+  pointer-events:auto;
+  opacity:1;
+  background:#f2a93b;
+  cursor:pointer;
+}
+
+#startBtn:hover.enabled{
+  transform:translateY(-2px);
+  box-shadow:0 clamp(4px, 1vw, 8px) 0 #5a2a2a;
+}
+
+/* Game HUD overlay - appears over everything */
+#hud{
+  position:absolute;
+  inset:0;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  gap:0;
+  pointer-events:none;
+  z-index:30; /* Highest - over GIFs and speech bubbles */
+  display:none;
+}
+
+.is-game #hud{
+  display:block;
+}
+
+/* Tug of War Bar */
+.tug-of-war-bar {
+  position: absolute;
+  top: 2vh;
+  left: 5vw;
+  right: 5vw;
+  height: 60px;
+  z-index: 40; /* Higher than other elements */
+}
+
+.bar-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #991b1b; /* Darker red background (opponent side) */
+  border: 3px solid #000;
+  border-radius: 0; /* Square corners */
+  overflow: hidden;
+  box-shadow: 0 6px 0 #7f1d1d, 0 8px 12px rgba(0,0,0,0.4); /* 3D shadow effect */
+}
+
+.bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, #1e40af 0%, #1e3a8a 100%); /* Darker blue gradient (player side) */
+  transition: width 0.3s ease-out;
+  border-radius: 0; /* Square corners */
+  box-shadow: 0 4px 0 #1e3a8a, inset 0 2px 4px rgba(255,255,255,0.1); /* 3D shadow effect */
+}
+
+.player-name {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.left-name {
+  left: 15px;
+}
+
+.right-name {
+  right: 15px;
+}
+
+/* Bar animations */
+.bar-fill.winning {
+  animation: barPulse 0.5s ease-in-out;
+}
+
+.bar-fill.losing {
+  animation: barShake 0.3s ease-in-out;
+}
+
+@keyframes barPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes barShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Mobile responsive tug-of-war bar */
+@media (max-width: 768px) {
+  .tug-of-war-bar {
+    top: 1vh;
+    left: 3vw;
+    right: 3vw;
+    height: 50px;
+  }
+  
+  .bar-container {
+    box-shadow: 0 4px 0 #7f1d1d, 0 6px 8px rgba(0,0,0,0.4); /* Smaller 3D shadow for mobile */
+  }
+  
+  .bar-fill {
+    box-shadow: 0 3px 0 #1e3a8a, inset 0 1px 3px rgba(255,255,255,0.1); /* Smaller 3D shadow for mobile */
+  }
+  
+  .player-name {
+    font-size: 10px;
+  }
+  
+  .left-name {
+    left: 10px;
+  }
+  
+  .right-name {
+    right: 10px;
+  }
+}
+
+#timer{
+  display: none; /* Hide timer completely */
+}
+
+#scores{
+  display: none; /* Hide scores completely */
+}
+
+.scoreChip{
+  background:transparent;
+  border:none;
+  padding:clamp(10px, 1.2vw, 14px) clamp(20px, 2.5vw, 30px);
+  min-width:clamp(100px, 12vw, 160px);
+  text-align:center;
+  font-size:clamp(14px, 1.8vw, 20px);
+  color:#ffffff;
+  font-family:'Press Start 2P',monospace;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+.scoreChip.you{filter:brightness(1.05)}
+
+#hint{
+  display: none; /* Hide hint text completely */
+}
+
+/* Result banner at top */
+#result{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:5}
+#result .panel{background:transparent}
+
+button{cursor:pointer;border:4px solid #273746;background:#fff;padding:10px 14px;box-shadow:0 6px 0 #b58148}
+button:active{transform:translateY(2px);box-shadow:0 4px 0 #b58148}
+
+/* Mobile adjustments for character selection */
+@media (max-width: 768px) {
+  #avatars{
+    grid-template-columns:repeat(2, 1fr);
+    gap:clamp(8px, 2vw, 15px); /* Smaller gap on mobile */
+    width:min(85vw, 65vh); /* Reduced width for better fit */
+    padding: 10px; /* Add padding for breathing room */
+  }
+  
+  #menu{
+    gap:1vh; /* Further reduced gap between elements */
+    padding:0.5vh 3vw; /* Further reduced padding */
+    justify-content: space-between; /* Distribute space evenly */
+  }
+  
+  #menu h1{
+    font-size:clamp(16px, 4.5vw, 28px); /* Smaller font for better fit */
+    margin-bottom:0.2vh; /* Further reduced margin */
+    line-height:1.2; /* Tighter line height */
+    text-transform: uppercase; /* All caps on mobile */
+  }
+  
+  #startBtn{
+    width:min(75vw, 55vh); /* Smaller button width */
+    font-size:clamp(14px, 4vw, 24px); /* Smaller font */
+    padding:clamp(10px, 2.5vw, 16px) clamp(20px, 4vw, 30px); /* Smaller padding */
+    border:clamp(3px, 0.8vw, 6px) solid #000; /* Thinner border on mobile */
+  }
+  
+  /* Additional mobile scaling for very small screens */
+  @media (max-width: 480px) {
+    #menu {
+      gap: 0.5vh; /* Even tighter spacing on very small screens */
+      padding: 0.3vh 3vw;
+    }
+    
+    #menu h1 {
+      font-size: clamp(14px, 4vw, 20px); /* Even smaller on very small screens */
+      margin-bottom: 0.1vh; /* Minimal margin */
+    }
+    
+    #avatars {
+      width: min(90vw, 60vh); /* Even smaller grid on very small screens */
+      gap: clamp(6px, 1.5vw, 12px);
+    }
+    
+    #startBtn {
+      width: min(70vw, 50vh); /* Even smaller button */
+      font-size: clamp(12px, 3.5vw, 20px);
+      padding: clamp(8px, 2vw, 14px) clamp(16px, 3.5vw, 26px);
+    }
+  }
+}
+@media (max-width: 640px){
+  #timer{width:clamp(160px, 40vw, 240px);height:clamp(20px, 4vw, 28px)}
+  .scoreChip{font-size:16px;min-width:130px;padding:10px 22px}
+  #hint{font-size:8px;padding:4px 8px;white-space:normal;max-width:90vw}
+}
+
+/* Trump Introduction Popup */
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Ensure smooth transitions without scaling issues */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.popup.hidden {
+  display: none;
+}
+
+.popup-content {
+  background: #63361c;
+  border: 8px solid #000000;
+  border-radius: 16px;
+  width: min(90vw, 600px); /* Reduced from 800px to 600px */
+  height: min(60vh, 350px); /* Reduced from 400px to 350px */
+  position: relative;
+  overflow: hidden;
+}
+
+.trump-intro-layout {
+  display: flex;
+  height: 100%;
+  align-items: flex-start; /* Changed from center to flex-start for top alignment */
+  gap: 20px; /* Increased gap for better breathing room */
+  padding: 10px; /* Reduced to match lose popup */
+}
+
+.trump-image-container {
+  flex: 0 0 50%; /* Same width as text container */
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align image to the left */
+}
+
+.trump-image-container img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 8px;
+}
+
+.trump-text-container {
+  flex: 0 0 50%; /* Same width as image container */
+  height: 100%;
+  display: flex;
+  align-items: flex-start; /* Changed from center to flex-start for top alignment */
+  padding-left: 0; /* Removed extra padding since layout has consistent padding */
+  padding-right: 15px; /* Add right padding so text doesn't touch edge */
+  padding-top: 20px; /* Add some top padding for better spacing */
+}
+
+.trump-intro-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.2vw, 12px); /* Made text smaller to fit container better */
+  color: #000000;
+  line-height: 1.6; /* Increased line height for better readability */
+  text-align: left;
+}
+
+.trump-intro-text .white-text {
+  color: #ffffff;
+  text-shadow: 2px 2px 0px #000000; /* Add black outline for white text visibility */
+}
+
+/* Skip Button */
+.skip-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #e31b2f;
+  color: #ffe6c7;
+  border: 4px solid #000000;
+  border-radius: 0; /* Sharp pixelated corners like intro button */
+  padding: 8px 16px; /* Same padding as intro PLAY NOW button */
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 1.2vw, 12px); /* Same size as intro PLAY NOW button */
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  text-shadow: 0 2px #000000; /* Match intro button shadow */
+  box-shadow: 0 4px 0 #5a2a2a; /* Keep subtle shadow for red */
+}
+
+.skip-button:hover {
+  background: #ff4444;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 #000000; /* Consistent hover shadow */
+}
+
+.skip-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 0 #000000;
+}
+
+/* Trump Skip Button - match PLAY NOW style and behavior */
+.trump-skip-button {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: #ffffff; /* Start white to allow flicker to blue */
+  color: #e31b2f; /* Keep red for Trump skip? If needs blue/white, adjust below */
+  border: 4px solid #000000;
+  border-radius: 0; /* Sharp corners like intro */
+  padding: 8px 16px; /* Same as intro */
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 1.2vw, 12px); /* Same as intro */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  text-shadow: 0 2px #000000;
+  animation: playNowColorSwitch 3s ease-in-out infinite; /* Same flicker behavior */
+}
+
+.trump-skip-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 #000000;
+}
+
+.trump-skip-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 0 #000000;
+}
+
+@keyframes elegantFlicker {
+  0%, 100% {
+    background: #e31b2f;
+    box-shadow: 0 0 5px rgba(227, 27, 47, 0.5);
+  }
+  25% {
+    background: #ff4444;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.7);
+  }
+  50% {
+    background: #ff6666;
+    box-shadow: 0 0 15px rgba(255, 102, 102, 0.8);
+  }
+  75% {
+    background: #ff4444;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.7);
+  }
+}
+
+/* Countdown Overlay */
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200; /* Higher than other popups but not interfering with game */
+  animation: countdownFlicker 0.5s ease-in-out infinite alternate;
+  touch-action: none; /* Prevent all touch gestures including zoom */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.countdown-overlay.hidden {
+  display: none;
+}
+
+.countdown-number {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(60px, 15vw, 120px);
+  color: #ffffff;
+  text-shadow: 4px 4px 0 #000000;
+  animation: countdownPulse 1s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-tap-icon {
+  width: clamp(100px, 20vw, 200px);
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.countdown-instruction {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.tap-gif {
+  width: 60px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.countdown-instruction p {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 2vw, 14px);
+  color: #ffffff;
+  text-shadow: 2px 2px 0px #000000;
+  margin: 0;
+  text-align: center;
+}
+
+.tap-text {
+  font-size: clamp(32px, 8vw, 48px) !important;
+  font-weight: bold;
+  animation: tapFlicker 0.15s ease-in-out;
+}
+
+@keyframes countdownPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes countdownFlicker {
+  0% { background: rgba(255, 0, 0, 0.9); } /* Red background */
+  100% { background: rgba(0, 0, 255, 0.9); } /* Blue background */
+}
+
+@keyframes tapFlicker {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.8); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+
+/* Character Bounce Animation */
+@keyframes characterBounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  25% { transform: translateY(-10px) scale(1.05); }
+  50% { transform: translateY(-5px) scale(1.02); }
+  75% { transform: translateY(-8px) scale(1.03); }
+}
+
+/* VS Logo Pulse Animation */
+@keyframes vsPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    filter: drop-shadow(3px 3px 0px #000000) brightness(1);
+  }
+  50% { 
+    transform: scale(1.1); 
+    filter: drop-shadow(5px 5px 0px #000000) brightness(1.2);
+  }
+}
+
+/* VS Intro Popup Styles */
+.vs-intro-content {
+  background: linear-gradient(135deg, #4a5cff 0%, #2a3cdd 100%); /* Blue gradient background */
+  border: 8px solid #000000;
+  width: min(90vw, 900px); /* Increased from default to 900px for bigger VS popup */
+  height: min(65vh, 450px); /* Increased height for bigger VS popup */
+  /* Removed CSS animation - using GSAP instead */
+}
+
+.vs-intro-layout {
+  display: flex;
+  height: 100%;
+  align-items: flex-end; /* Align images to bottom */
+  justify-content: space-between;
+  padding: 0; /* No padding */
+  gap: 0;
+  position: relative;
+}
+
+.vs-character-left,
+.vs-character-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* Align to bottom */
+  height: 100%;
+  position: relative;
+}
+
+.vs-character-left img,
+.vs-character-right img {
+  width: 350px; /* Almost double size for maximum impact */
+  height: 350px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border: none; /* No border like winning screen */
+  border-radius: 0;
+  filter: brightness(1.3) contrast(1.2) saturate(1.1); /* Overexposed like winning screen */
+  position: relative;
+  bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.vs-character-left img {
+  animation: slideInFromLeft 4s ease-out forwards;
+}
+
+.vs-character-right img {
+  animation: slideInFromRight 4s ease-out forwards;
+}
+
+.vs-character-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2.5vw, 20px);
+  color: #ffffff;
+  text-shadow: 2px 2px 0px #000000;
+  text-align: center;
+  text-transform: uppercase;
+  position: absolute;
+  top: 20px; /* Position at top */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.vs-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1; /* Behind the characters */
+}
+
+.vs-logo {
+  width: clamp(120px, 20vw, 200px); /* Bigger size for fight scene */
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0px #000000);
+  animation: vsPulse 1.5s ease-in-out infinite; /* Keep pulsing animation */
+}
+
+/* Mobile adjustments for popup */
+@media (max-width: 768px) {
+  .popup-content {
+    width: calc(100vw - 20px) !important; /* Fill full width with small margin */
+    height: 80vh !important; /* Match VS popup height exactly */
+    margin: 10px !important; /* Small margin for breathing room */
+  }
+  
+  .trump-intro-layout {
+    flex-direction: column;
+    gap: 0; /* Remove gap to align image and text */
+    padding: 20px; /* Increased padding to match VS popup */
+    align-items: stretch; /* Stretch items to fill width */
+    justify-content: flex-start; /* Align everything to top */
+    height: 100%;
+  }
+  
+  .trump-image-container {
+    flex: 0 0 auto; /* Fixed height for image */
+    width: 100%;
+    height: 250px; /* Increased height for bigger image */
+    display: flex;
+    align-items: flex-start; /* Align image to top */
+    justify-content: center;
+    margin-bottom: 20px; /* Add spacing between image and text */
+  }
+  
+  .trump-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: scale(1.2); /* Make image slightly bigger */
+  }
+  
+  .trump-text-container {
+    flex: 1; /* Take remaining space */
+    width: 100%;
+    padding: 0; /* Remove extra padding */
+    align-items: flex-start; /* Align text to top for mobile */
+    justify-content: flex-start; /* Align text to top of container */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .trump-intro-text {
+    font-size: clamp(14px, 3.5vw, 20px); /* Bigger text for better readability */
+    text-align: left; /* Left align text for mobile */
+    line-height: 1.5;
+    width: 100%;
+    margin-top: 0; /* Ensure text starts at top */
+  }
+  
+  .trump-skip-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(12px, 2.5vw, 16px); /* Bigger button text */
+    padding: 12px 24px; /* Bigger button padding */
+    height: auto;
+    min-height: 44px; /* Match PLAY NOW button height */
+  }
+  
+  .trump-skip-button:hover {
+    transform: translateX(-50%); /* Keep centered on mobile, no upward movement */
+  }
+  
+}
+
+/* Winning Screen Popup Styles */
+.winning-content {
+  background: #3135f0; /* Blue background */
+  border: 8px solid #000000;
+  width: min(90vw, 1000px); /* Large winning popup */
+  height: min(70vh, 500px);
+  animation: winningEntrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+}
+
+.winning-layout {
+  display: flex;
+  height: 100%;
+  align-items: flex-end; /* Align images to bottom */
+  justify-content: space-between;
+  padding: 0; /* No padding */
+  gap: 0; /* No gap */
+}
+
+.winning-character-left,
+.winning-character-right {
+  flex: 1;
+  display: flex;
+  align-items: flex-end; /* Align to bottom */
+  justify-content: center;
+  height: 100%; /* Full height for images */
+}
+
+.winning-character-left img {
+  width: 300px; /* Player image size */
+  height: 300px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border: none;
+  border-radius: 0;
+  filter: brightness(1.3) contrast(1.2) saturate(1.1);
+  position: relative;
+  bottom: 0;
+}
+
+.winning-character-right img {
+  width: 350px; /* Trump image slightly bigger */
+  height: 350px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border: none;
+  border-radius: 0;
+  filter: brightness(1.3) contrast(1.2) saturate(1.1);
+  position: relative;
+  bottom: 0;
+}
+
+.winning-character-left img {
+  animation: slideInFromLeft 6s ease-out forwards, gentleSlide 3s ease-in-out infinite 6s; /* Initial slide then gentle movement */
+}
+
+.winning-character-right img {
+  animation: slideInFromRight 6s ease-out forwards, trumpDance 3s ease-in-out infinite 6s; /* Initial slide then gentle dancing */
+}
+
+.winning-vs-text {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 5%; /* Moved much higher up */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.winning-vs-text p {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 5vw, 40px); /* Double the size for title */
+  color: #ffff00; /* Yellow text */
+  text-shadow: 4px 4px 0px #000000;
+    text-align: center;
+  animation: winningTitleStamp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  line-height: 1.0; /* Single line height */
+  white-space: nowrap; /* Force single line */
+}
+
+.winning-message {
+  position: absolute;
+  top: 25%; /* More space to prevent overlap with title */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(90% - 40px); /* 40px smaller for more concise text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.winning-message p {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.3vw, 12px); /* Slightly smaller for 3 lines */
+  color: #ffffff; /* White text */
+  text-align: center;
+  line-height: 1.2; /* Tighter line height for 3 lines */
+  max-width: 90%;
+  white-space: normal; /* Allow line breaks for 3 lines */
+}
+
+/* Unified Play Again Button */
+.play-again-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px; /* Match Trump skip button position */
+  background: #ffffff; /* White background like PLAY NOW button */
+  color: #e31b2f; /* Red text like PLAY NOW button */
+  border: clamp(4px, 0.8vw, 8px) solid #000; /* Pixelated thick border like PLAY NOW */
+  border-radius: 0; /* Sharp pixelated corners like PLAY NOW button */
+  padding: clamp(6px, 0.8vw, 10px) clamp(12px, 1.5vw, 20px); /* Same padding as PLAY NOW */
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(12px, 1.5vw, 18px); /* Same size as PLAY NOW button */
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  text-shadow: 0 2px #000000; /* Black shadow like PLAY NOW button */
+  animation: playNowColorSwitch 3s ease-in-out infinite; /* Same animation as PLAY NOW button */
+  
+  /* Pixelated styling like PLAY NOW button */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* Pixelated box shadow effect like PLAY NOW button */
+  box-shadow: 
+    clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 8px) 0 #000,
+    clamp(8px, 1.6vw, 16px) clamp(8px, 1.6vw, 16px) 0 #000;
+}
+
+.play-again-btn:hover {
+  transform: translateY(clamp(2px, 0.4vw, 4px)); /* Pixelated hover movement like PLAY NOW */
+  box-shadow: 
+    clamp(2px, 0.4vw, 4px) clamp(2px, 0.4vw, 4px) 0 #000,
+    clamp(6px, 1.2vw, 12px) clamp(6px, 1.2vw, 12px) 0 #000; /* Pixelated shadow on hover like PLAY NOW */
+  animation-play-state: paused; /* Pause animation on hover like PLAY NOW */
+}
+
+.play-again-btn:active {
+  transform: translateY(0);
+  box-shadow: 
+    clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 8px) 0 #000,
+    clamp(8px, 1.6vw, 16px) clamp(8px, 1.6vw, 16px) 0 #000; /* Reset to normal shadow */
+}
+
+/* Winning Animations */
+@keyframes winningEntrance {
+  0% { 
+    transform: scale(0.3) rotate(-5deg); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: scale(1.05) rotate(1deg); 
+    opacity: 0.9; 
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1; 
+  }
+}
+
+@keyframes winningTitleStamp {
+  0% { 
+    transform: scale(0.1) rotate(-10deg); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: scale(1.3) rotate(5deg); 
+    opacity: 0.9; 
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1; 
+  }
+}
+
+@keyframes playAgainColorSwitch {
+  0%, 100% { 
+    background: #4a5cff; 
+    color: #ffffff; 
+    box-shadow: 0 4px 0 #7a8cff;
+  }
+  50% { 
+    background: #ffffff; 
+    color: #4a5cff; 
+    box-shadow: 0 4px 0 #4a5cff;
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% { 
+    transform: translateX(-200px); 
+    opacity: 0; 
+  }
+  20% { 
+    transform: translateX(-50px); 
+    opacity: 0.8; 
+  }
+  40% { 
+    transform: translateX(0px); 
+    opacity: 1; 
+  }
+  60% { 
+    transform: translateX(5px); 
+    opacity: 1; 
+  }
+  80% { 
+    transform: translateX(2px); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateX(0px); 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideInFromRight {
+  0% { 
+    transform: translateX(200px); 
+    opacity: 0; 
+  }
+  20% { 
+    transform: translateX(50px); 
+    opacity: 0.8; 
+  }
+  40% { 
+    transform: translateX(0px); 
+    opacity: 1; 
+  }
+  60% { 
+    transform: translateX(-5px); 
+    opacity: 1; 
+  }
+  80% { 
+    transform: translateX(-2px); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateX(0px); 
+    opacity: 1; 
+  }
+}
+
+@keyframes winningPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    text-shadow: 4px 4px 0px #000000;
+  }
+  50% { 
+    transform: scale(1.1); 
+    text-shadow: 6px 6px 0px #000000;
+  }
+}
+
+
+@keyframes gentleSlide {
+  0%, 100% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(25px); /* Move closer to center for overlap */
+  }
+}
+
+@keyframes trumpDance {
+  0%, 100% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(-25px); /* Move closer to center for overlap */
+  }
+}
+
+/* Mobile adjustments for winning popup */
+@media (max-width: 768px) {
+  .winning-content {
+    width: calc(100vw - 20px) !important;
+    height: 80vh !important;
+    margin: 10px !important;
+    padding: 0 !important;
+  }
+  
+  .winning-layout {
+    flex-direction: row; /* Keep side by side on mobile */
+    height: 100%;
+    padding: 0; /* No padding on mobile */
+    gap: -50px; /* Negative gap to allow overlap on mobile */
+    align-items: flex-end; /* Align images to bottom on mobile too */
+    justify-content: center; /* Center the overlapping characters */
+  }
+  
+  .winning-character-left,
+  .winning-character-right {
+    flex: 1;
+    height: 100%; /* Full height for images on mobile too */
+  }
+  
+  .winning-character-left img {
+    width: 250px; /* Bigger player image on mobile */
+    height: 250px;
+    position: relative;
+    bottom: 0;
+    z-index: 1; /* Allow overlap */
+  }
+  
+  .winning-character-right img {
+    width: 280px; /* Bigger Trump image on mobile */
+    height: 280px;
+    position: relative;
+    bottom: 0;
+    z-index: 2; /* Trump on top for overlap effect */
+  }
+  
+  .winning-vs-text {
+    top: 6%; /* Moved down 30px on mobile */
+  }
+  
+  .winning-vs-text p {
+    font-size: clamp(27px, 6.75vw, 36px); /* 50% bigger for mobile title */
+    line-height: 1.1;
+    white-space: normal; /* Allow 2 lines on mobile */
+    animation: winningTitleStamp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  }
+  
+  .winning-message {
+    top: 22%; /* More space to prevent overlap with title on mobile + 10px more spacing */
+    padding: 0 15px;
+  }
+  
+  .winning-message p {
+    font-size: clamp(10px, 3vw, 16px); /* Slightly smaller body copy on mobile to fit all elements */
+    line-height: 1.2;
+  }
+  
+}
+
+/* Lose Screen Popup Styles */
+.lose-content {
+  background: #63361c; /* Match Trump popup brown background */
+  border: 8px solid #000000;
+  width: min(90vw, 600px); /* Same size as Trump popup */
+  height: min(60vh, 350px);
+  position: relative;
+  overflow: hidden;
+}
+
+.lose-layout {
+  display: flex;
+  height: 100%;
+  align-items: flex-start; /* Changed from center to flex-start for top alignment */
+  gap: 20px;
+  padding: 10px; /* Reduced to 10px on all sides */
+}
+
+.lose-image-container {
+  flex: 0 0 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align image to the left */
+}
+
+.lose-image-container img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 8px;
+}
+
+.lose-text-container {
+  flex: 0 0 50%; /* Same width as image container */
+  height: 100%;
+  display: flex;
+  align-items: flex-start; /* Changed from center to flex-start for top alignment */
+  padding-left: 0; /* No extra padding since layout has consistent padding */
+  padding-right: 15px; /* Add right padding so text doesn't touch edge like Trump popup */
+  padding-top: 20px; /* Add some top padding for better spacing */
+}
+
+.lose-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.2vw, 12px); /* Match Trump popup text size */
+  color: #000000; /* Match Trump popup black text */
+  line-height: 1.6;
+  text-align: left;
+}
+
+
+
+/* Mobile adjustments for lose popup */
+@media (max-width: 768px) {
+  .lose-content {
+    width: calc(100vw - 20px) !important; /* Fill full width with small margin */
+    height: 80vh !important; /* Match VS popup height exactly */
+    margin: 10px !important; /* Small margin for breathing room */
+  }
+  
+  .lose-layout {
+    flex-direction: column;
+    gap: 0; /* Remove gap to align image and text */
+    padding: 20px; /* Increased padding to match VS popup */
+    align-items: stretch; /* Stretch items to fill width */
+    justify-content: flex-start; /* Align everything to top */
+    height: 100%;
+  }
+  
+  .lose-image-container {
+    flex: 0 0 auto; /* Fixed height for image */
+    width: 100%;
+    height: 250px; /* Increased height for bigger image */
+    display: flex;
+    align-items: flex-start; /* Align image to top */
+    justify-content: center;
+    margin-bottom: 15px; /* 15px spacing between image and text */
+    padding-top: 10px; /* 10px top padding for image */
+  }
+  
+  .lose-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: scale(1.2); /* Make image slightly bigger */
+  }
+  
+  .lose-text-container {
+    flex: 1; /* Take remaining space */
+    width: 100%;
+    padding: 0; /* Remove extra padding */
+    padding-top: 15px; /* 15px top padding for text */
+    align-items: flex-start; /* Align text to top for mobile */
+    justify-content: flex-start; /* Align text to top of container */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lose-text {
+    font-size: clamp(14px, 3.5vw, 20px); /* Match Trump popup mobile text size */
+    text-align: left; /* Left align text for mobile */
+    line-height: 1.5;
+    width: 100%;
+    margin-top: 0; /* Ensure text starts at top */
+  }
+  
+  .play-again-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(16px, 4vw, 24px); /* Match PLAY NOW mobile font size */
+    padding: clamp(12px, 2.5vw, 20px) clamp(24px, 5vw, 40px); /* Match PLAY NOW mobile padding */
+    height: auto;
+    min-height: 44px; /* Match PLAY NOW button height */
+    background: #ffffff; /* White background like PLAY NOW button */
+    color: #e31b2f; /* Red text like PLAY NOW button */
+    border: clamp(4px, 0.8vw, 8px) solid #000; /* Pixelated thick border like PLAY NOW */
+    border-radius: 0; /* Sharp pixelated corners */
+    text-shadow: 0 2px #000000; /* Black shadow */
+    animation: playNowColorSwitch 3s ease-in-out infinite; /* Same animation as PLAY NOW button */
+    
+    /* Pixelated box shadow effect like PLAY NOW button */
+    box-shadow: 
+      clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 8px) 0 #000,
+      clamp(8px, 1.6vw, 16px) clamp(8px, 1.6vw, 16px) 0 #000;
+  }
+  
+  .play-again-btn:hover {
+    transform: translateX(-50%) translateY(clamp(2px, 0.4vw, 4px)); /* Pixelated hover movement like PLAY NOW */
+    box-shadow: 
+      clamp(2px, 0.4vw, 4px) clamp(2px, 0.4vw, 4px) 0 #000,
+      clamp(6px, 1.2vw, 12px) clamp(6px, 1.2vw, 12px) 0 #000; /* Pixelated shadow on hover like PLAY NOW */
+    animation-play-state: paused; /* Pause animation on hover like PLAY NOW */
+  }
+} 

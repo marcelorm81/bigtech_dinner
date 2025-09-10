@@ -1,0 +1,150 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Big Tech Dinner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="stage" class="stage-1x1">
+      <div id="gameGifsContainer" class="gameplay-gifs">
+        <img id="gifLeft" class="actorGif" alt="left" />
+        <img id="gifCenter" class="actorGif" alt="center" />
+        <img id="gifRight" class="actorGif" alt="right" />
+      </div>
+      <canvas id="game" width="800" height="800"></canvas>
+      <img id="flowerOverlay" alt="flowers" src="assets/floweroverlay.png" />
+    </div>
+    <div id="ui">
+      <div id="intro" class="panel">
+        <img id="logoGif" alt="Big Tech Dinner" src="assets/logo.gif" class="logoGif" />
+        <div class="intro-gifs">
+          <img id="gifLeftIntro" alt="Mark" src="assets/mark_game.gif" />
+          <img id="gifCenterIntro" alt="Trump" src="assets/trump_game.gif" />
+          <img id="gifRightIntro" alt="Tim" src="assets/tim_game.gif" />
+        </div>
+        <!-- Speech bubbles for side characters -->
+        <div id="leftSpeechBubble" class="speech-bubble left-bubble hidden">
+          <img src="assets/speechbubble.gif" alt="Speech Bubble" style="transform: scaleX(-1);" />
+          <span class="bubble-text">$600<br>Billion</span>
+        </div>
+        <div id="rightSpeechBubble" class="speech-bubble right-bubble hidden">
+          <img src="assets/speechbubble.gif" alt="Speech Bubble" />
+          <span class="bubble-text">$600<br>Billion</span>
+        </div>
+        <button id="startGif" class="startGif">PLAY NOW</button>
+      </div>
+      <div id="menu" class="panel hidden">
+        <h1>Select your<br>Tech BRO</h1>
+        <div id="avatars"></div>
+        <button id="startBtn">Start</button>
+      </div>
+      <div id="hud" class="panel hidden">
+        <div id="tugOfWarBar" class="tug-of-war-bar">
+          <div class="bar-container">
+            <div class="bar-fill" id="barFill"></div>
+            <div class="player-name left-name" id="leftPlayerName">YOU</div>
+            <div class="player-name right-name" id="rightPlayerName">OPPONENT</div>
+          </div>
+        </div>
+        <div id="timer">30.0</div>
+        <div id="scores"></div>
+        <div id="hint">Tap or press Spacebar to flatter</div>
+      </div>
+      <div id="result" class="panel hidden">
+        <div id="resultText"></div>
+        <button id="playAgainBtn" class="play-again-btn">Play again</button>
+      </div>
+    </div>
+    
+    <!-- Trump Introduction Popup -->
+    <div id="trumpIntroPopup" class="popup hidden">
+      <div class="popup-content">
+        <div class="trump-intro-layout">
+          <div class="trump-image-container">
+            <img id="trumpIntroImage" src="assets/TRUMPINTRO.gif" alt="Trump Introduction" />
+          </div>
+          <div class="trump-text-container">
+            <div id="trumpIntroText" class="trump-intro-text"></div>
+          </div>
+        </div>
+        <button id="skipTrumpBtn" class="trump-skip-button">Skip</button>
+      </div>
+    </div>
+    
+    <!-- VS Introduction Popup -->
+    <div id="vsIntroPopup" class="popup hidden">
+      <div class="popup-content vs-intro-content">
+        <div class="vs-intro-layout">
+          <div class="vs-character-left">
+            <img id="vsPlayerImage" src="" alt="Player Character" />
+            <div id="vsPlayerName" class="vs-character-name"></div>
+          </div>
+          
+          <div class="vs-center">
+            <img src="assets/VS.gif" alt="VS" class="vs-logo" />
+          </div>
+          
+          <div class="vs-character-right">
+            <img id="vsOpponentImage" src="" alt="Opponent Character" />
+            <div id="vsOpponentName" class="vs-character-name"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Countdown Overlay -->
+    <div id="countdownOverlay" class="countdown-overlay hidden">
+      <div id="countdownNumber" class="countdown-number">3</div>
+      <div class="countdown-instruction">
+        <img src="assets/tap.gif" alt="Tap" class="tap-gif" />
+        <p>tap or press spacebar to play</p>
+      </div>
+    </div>
+    
+    <!-- Winning Screen Popup -->
+    <div id="winningPopup" class="popup hidden">
+      <div class="popup-content winning-content">
+        <div class="winning-layout">
+          <div class="winning-character-left">
+            <img id="winningPlayerImage" src="" alt="Winning Player" />
+          </div>
+          <div class="winning-vs-text">
+            <p id="winningTitleText"></p>
+          </div>
+          <div class="winning-character-right">
+            <img id="trumpDanceImage" src="assets/TRUMP_DANCE.gif" alt="Trump Dancing" />
+          </div>
+        </div>
+        <div class="winning-message">
+          <p id="winningMessageText"></p>
+        </div>
+        <button id="winningPlayAgainBtn" class="play-again-btn">PLAY AGAIN</button>
+      </div>
+    </div>
+    
+    <!-- Lose Screen Popup -->
+    <div id="losePopup" class="popup hidden">
+      <div class="popup-content lose-content">
+        <div class="lose-layout">
+          <div class="lose-image-container">
+            <img id="loseTrumpImage" src="assets/TRUMPINTRO.gif" alt="Trump Disappointed" />
+          </div>
+          <div class="lose-text-container">
+            <div id="loseText" class="lose-text"></div>
+          </div>
+        </div>
+        <button id="losePlayAgainBtn" class="play-again-btn">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html> 
